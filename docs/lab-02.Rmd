@@ -14,6 +14,7 @@ output:
 #Covid Url (Read In The Url)
 
 library(tidyverse)
+library(zoo)
 covid=read_csv("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv")
 ```
 
@@ -54,9 +55,9 @@ knitr::kable(most_all_time, caption = "Five Counties With The Most New Data (Fro
 
 library(readxl)
   
-PopulationEstimates=read_excel("../data/PopulationEstimates.xl", 
+PopulationEstimates=read_excel("../data/PopulationEstimates.xls", 
   skip = 2) %>% 
-  select(fips = FIPStxt, pop2019 = "POP_ESTIMATE_2019")
+  select(fips = FIPStxt, pop2019 = "POP_ESTIMATE_2019", Area_Name)
 
 #Step 7
 #Join the population data to the California COVID data.
@@ -117,6 +118,7 @@ ggplot(data = fourStates, aes(x = date)) +
  theme_bw()
 
 ```
+
 
 ```{r}
 new = fourStates %>% left_join(PopulationEstimates, by = c("state" = "Area_Name") ) %>% 
