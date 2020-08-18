@@ -1,0 +1,138 @@
+---
+title: "lab 2"
+author: "Nate"
+date:
+output:
+  html_document:
+    theme: flatly
+---
+
+```{r}
+#Question:1
+
+#Step 1
+#Covid Url (Read In The Url)
+
+library(tidyverse)
+covid=read_csv("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv")
+```
+
+```{r}
+# Step 2
+# Making A Subset That Filters The Data To California And Added A New Column (Mutate) With The Daily New Cases Using Either diff or lag.
+
+q1 = covid %>% 
+  filter(state == "California")%>%
+  group_by(county) %>% 
+  mutate(newCases = c(cases[1], diff(cases))) %>% 
+  ungroup() %>% 
+  filter(date >= max(date)-13)
+
+#Step 3
+#Five Counties with the Most Cumulative Case
+
+most_all_time = q1 %>% 
+  filter(date == max(date)) %>% 
+  slice_max(cases, n = 5) %>% 
+  select(county, cases)
+
+knitr::kable(most_all_time, caption = "Most Cumulative Cases / Most Cases Of All Time", col.names = c("Counties", "Max Cases To Date"))
+
+#Five Counties With The Most New Data (From Yesterday)
+
+most_new_data_from_yesterday = q1 %>% 
+  filter(date == max(date)) %>% 
+  slice_max(newCases, n = 5)
+
+knitr::kable(most_all_time, caption = "Five Counties With The Most New Data (From Yesterday)", col.names = c("Counties", "New Cases"))
+
+#Step 4
+#Please download the data and store it in the data directory of your project. = Did!
+  
+#Step 5
+#Load the population data with the “dataset importer” (find the file in your data directory via the file explorer –> click on it –> select “Import Dataset”). Be sure to copy the code preview (ignore the View(...)) and insert it in your Rmarkdown. This will allow the data to be referenced every time the file is run! = Did!
+
+library(readxl)
+
+PopulationEstimates=read_excel("../data/PopulationEstimates.xls", 
+  skip = 2) %>% 
+  select(fips = FIPStxt, pop2019 = "POP_ESTIMATE_2019", Area_Name)
+
+#Step 7
+#Join the population data to the California COVID data.
+
+j1 = left_join(covid, PopulationEstimates, by = "fips")
+
+```
+
+#Step 9
+#Number Of Cases In The Last 14 Days Per 100,000 
+
+```{r}
+last14 = j1 %>% 
+  filter(state ==c("California")) %>% 
+  group_by(county, date) %>% 
+  summarize(totalcases = sum(cases, na.rm = TRUE),
+            pop2019    = sum(pop2019, na.rm = TRUE)) %>%
+  ungroup() %>% 
+  filter(date >= max(date) - 13) %>% 
+  group_by(county, pop2019) %>% 
+  mutate(newcases = totalcases-lag(totalcases)) %>% 
+  summarize(totNewCases = sum(newcases, na.rm = TRUE)) %>% 
+  mutate(per100 = totNewCases / (pop2019/100000)) %>% 
+  filter(per100 <= 100)
+```
+
+```{r}
+#Question 2
+
+#Question 2:In this question, we are going to look at the story of 4 states and the impact scale can have on data interpretation. The states include: New York, California, Louisiana, and Florida.Your task is to make a faceted bar plot showing the number of daily, new cases at the state level.
+
+#Step 1
+
+fourStates=covid %>% 
+  group_by(state,date) %>% 
+  summarize(cases=sum(cases)) %>%
+  ungroup() %>% 
+  filter(state %in% c("California", "New York", "Florida", "Louisiana")) %>%
+  group_by(state) %>% 
+  mutate(newCases=cases-lag(cases)) %>%
+  mutate(roll7=zoo::rollmean(newCases,7,fill=NA,
+                      align="right"))
+
+```
+
+```{r}
+#Step 2
+
+ggplot(data = fourStates, aes(x = date)) + 
+  geom_col(aes(y = newCases), col = "pink") + 
+  geom_line(aes(y= roll7), col = "darkred")+
+  facet_wrap(~state) +
+  labs(title = "Daily New Cases",  
+       x = "Date",  
+       y = "New Cases",  
+       caption = "Based On NY Times Covid Data",  
+       subtitle = 'Data Source: NY Times') +
+       theme_bw()
+
+```
+
+```{r}
+new = fourStates %>% left_join(PopulationEstimates, by = c("state" = "Area_Name") ) %>% 
+  mutate(perCapNew = newCases / pop2019, 
+         perCap7 = rollmean(perCapNew, 7, fill = NA, align = "center" ))
+
+
+ggplot(data = new, aes(x = date)) + 
+  geom_col(aes(y = perCapNew), col = "pink") + 
+  geom_line(aes(y= perCap7), col = "darkred")+
+  facet_wrap(~state) +
+  labs(title = "Daily New Cases",  
+       x = "Date",  
+       y = "New Cases",  
+       caption = "Based On NY Times Covid Data",  
+       subtitle = 'Data Source: NY Times') +
+       theme_bw()
+```
+
