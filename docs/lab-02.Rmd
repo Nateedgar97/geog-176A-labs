@@ -7,21 +7,21 @@ output:
     theme: flatly
 ---
 
+
+# Question:1
+
+## Step 1
+### Covid Url (Read In The Url)
 ```{r}
-#Question:1
-
-#Step 1
-#Covid Url (Read In The Url)
-
 library(tidyverse)
 library(zoo)
 covid=read_csv("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv")
 ```
 
-```{r}
-#Step 2
-#Making A Subset That Filters The Data To California And Added A New Column (Mutate) With The Daily New Cases Using Either diff or lag.
 
+# Step 2
+Making A Subset That Filters The Data To California And Added A New Column (Mutate) With The Daily New Cases Using Either diff or lag.
+```{r}
 q1=covid %>% 
   filter(state == "California")%>%
   group_by(county) %>% 
@@ -29,7 +29,7 @@ q1=covid %>%
   ungroup() %>% 
   filter(date >= max(date)-13)
 
-#Step 3
+# Step 3
 #Five Counties with the Most Cumulative Case
 
 most_all_time = q1 %>% 
@@ -66,8 +66,8 @@ j1 = left_join(covid, PopulationEstimates, by = "fips")
 
 ```
 
-#Step 9
-#Number Of Cases In The Last 14 Days Per 100,000 
+# Step 9
+Number Of Cases In The Last 14 Days Per 100,000 
 
 ```{r}
 last14 = j1 %>% 
