@@ -1,0 +1,360 @@
+---
+title: "Geography 176A"
+author: "[Nate Edgar](https://github.com/Nateedgar97)"
+subtitle: 'Lab 04: Distances and the Border Zone'
+output:
+  html_document:
+    theme: journal
+---
+
+# Libraries
+
+### SPDS
+```{r, message=FALSE}
+library(tidyverse)
+library(sf)
+library(units)
+```
+
+### Data
+```{r, message=FALSE}
+library(USAboundaries)
+library(rnaturalearth)
+library(rmapshaper)
+```
+
+### Visualization
+```{r, message=FALSE}
+library(gghighlight)
+library(ggrepel)
+library(ggthemes)
+library(knitr)
+library(kableExtra)
+library(readxl)
+```
+
+## Question 1: Tesselation of Surfaces
+
+#### Step 1.1
+Getting CONUS States
+```{r}
+conus = USAboundaries::us_counties() %>% 
+  filter(!state_name %in% c("Hawaii", "Puerto Rico", "Alaska",
+             "Guam", "District of Columbia")) %>% 
+  st_transform(5070)
+```
+ 
+#### Step 1.2 & 1.5
+```{r}
+conus_com = conus %>% 
+  st_combine() %>% 
+  st_transform(5070)
+
+conus_cent = conus %>% 
+  st_centroid() %>% 
+  st_combine()
+
+conus_un=conus %>% 
+  st_union() %>% 
+  ms_simplify(keep=.05) #1.5
+
+```
+
+
+#### Step 1.3 & Step 1.4 
+```{r}
+conus_vor = conus_cent %>% #1.3
+  st_voronoi() %>% 
+  st_cast() %>% 
+  st_as_sf() %>%
+  mutate(id = 1:n()) %>% 
+  st_intersection(conus_un) #1.4
+  
+conus_tri = conus_cent %>% 
+  st_triangulate() %>% 
+  st_cast() %>% 
+  st_as_sf() %>%
+  mutate(id = 1:n()) %>% 
+  st_intersection(conus_un) 
+
+conus_grd = conus %>% 
+  st_make_grid(n = c(70,50)) %>% 
+  st_cast() %>% 
+  st_as_sf() %>%
+  mutate(id = 1:n()) %>% 
+  st_intersection(conus_un)
+
+conus_hex = conus %>% 
+  st_make_grid(n = c(70,50), square = FALSE) %>% 
+  st_cast() %>% 
+  st_as_sf() %>% 
+  mutate(id = 1:n()) %>% 
+  st_intersection(conus_un)
+```
+
+#### Step 1.6 - FUNCTION JUNCTION
+```{r}
+plot_tes = function(arg1, title){
+  ggplot() + 
+    geom_sf(data = arg1, col = "white", size = .2) + 
+    theme_void() + 
+    theme(legend.position = 'none',
+          plot.title = element_text(face = "bold", color = "darkblue", hjust = .5, size = 24)) +
+    labs(title = paste0(title),
+         caption = paste0(nrow(arg1), " features"))
+}
+```
+
+#### Step 1.7
+```{r}
+plot_tes(conus, "Original")
+plot_tes(conus_vor, "Voroni")
+plot_tes(conus_tri, "Triangualtion")
+plot_tes(conus_grd, "Square")
+plot_tes(conus_hex, "Hexegonal")
+```
+
+
+# Question 2: Tesselation of Surfaces
+#### Step 2.1 - FUNCTION JUNCTION PART 2
+```{r}
+sum_tes = function(arg1, string){
+  
+  newframe = arg1 %>% 
+    mutate(area = st_area(arg1)) %>% 
+    drop_units() %>% 
+    mutate(area = area*0.000001)
+
+  dataframe = data.frame(type = string,
+                num_feat = nrow(newframe),
+                mean_area = mean(newframe$area),
+                st_dev = sd(newframe$area),
+                tot_area = sum(newframe$area))
+ 
+  return(dataframe)
+}
+```
+
+#### Step 2.2
+```{r}
+sum_tes(conus, "original")
+sum_tes(conus_vor, "voronoi")
+sum_tes(conus_tri, "triangualtion")
+sum_tes(conus_grd, "square grid")
+sum_tes(conus_hex, "hexegonal")
+```
+
+#### Step 2.3
+```{r}
+tess_summary = bind_rows(
+  sum_tes(conus, "original"),
+  sum_tes(conus_vor, "voronoi"),
+  sum_tes(conus_tri, "triangualtion"),
+  sum_tes(conus_grd, "square grid"),
+  sum_tes(conus_hex, "hexegonal"))
+```
+
+#### Step 2.4
+```{r}
+kable(tess_summary,
+             col.names = c("Type", "Number of Features", "Mean Area", "St. Dev", "Total Area"),
+             caption = "Summary of Our 5 Tesselations") %>% 
+           kable_styling(bootstrap_options = "striped", full_width = F)
+```
+
+#### Step 2.5
+Describe the differences in each tesselation (original, voronoi, triangulation, etc). 
+
+-Original: Its the best represented one but has the greatet standard deviation in sizes (not good for making something  with an equal area)
+
+-Voronoi:It has the great variance in the sizes an varies similar to the original(closest to original)
+
+-Triangulation: It has twice the amount of features and is more accurate but slower to process.
+
+-Square/Trapozoid: It has the least standard devaition and least amount of features since they're the most equally spread out. 
+
+
+
+# Question 3: 
+#### Step 3.1 
+```{r, message=FALSE, reults=FALSE}
+dam_data = read_excel("../data/NID2019_U.xlsx") %>% 
+  filter(!is.na(LATITUDE)) %>% 
+  st_as_sf(coords = c("LONGITUDE","LATITUDE"), crs=4326) %>% 
+  st_transform(5070) %>% 
+  st_filter(conus_un)
+```
+
+#### Step 3.2
+```{r}
+point_in_polygon = function(points, polygon, arg3){
+  st_join(polygon, points) %>% 
+    st_drop_geometry() %>% 
+    count(get(arg3)) %>% 
+    setNames(c(arg3, "n")) %>% 
+    left_join(polygon, by = arg3) %>% 
+    st_as_sf()
+}
+```
+
+#### Step 3.3
+```{r}
+conus_counts = point_in_polygon(dam_data, conus, "geoid")
+vor_counts = point_in_polygon(dam_data, conus_vor, "id")
+tri_counts = point_in_polygon(dam_data, conus_tri, "id")
+grd_counts = point_in_polygon(dam_data, conus_grd, "id")
+hex_counts = point_in_polygon(dam_data, conus_hex, "id")
+```
+
+#### Step 3.4
+```{r}
+plot_counts = function(arg1, title){
+  ggplot() + 
+    geom_sf(data = arg1, aes(fill = n), col = NA) + 
+    viridis::scale_fill_viridis(option = "C") + 
+    theme_void() + 
+    theme(plot.title = element_text(face = "bold", color = "darkblue", hjust = .5, size = 24)) +
+    labs(title = paste0(title),
+         caption = paste0("Number of dams is ", sum(arg1$n)))
+}
+```
+
+
+#### Step 3.5
+```{r}
+plot_counts(conus_counts, "Number of Dams: Original Display")
+plot_counts(vor_counts, "Number of Dams: Voronoi Display")
+plot_counts(tri_counts, "Number of Dams: Triangulate Display")
+plot_counts(grd_counts, "Number of Dams: Grid Display")
+plot_counts(hex_counts, "Number of Dams: Hexagon Display")
+```
+
+#### Step 3.6
+
+#Comment on the influence of the tessellated surface in the visualization of point counts. 
+
+
+-Original: Keeps the data the same in this case showing it per counties.
+
+-Voronoi: 2nd worst in distortion of current data.
+
+-Triangulate: Most likely the most distorted in terms of what it's currently displaying.
+
+-Grid: 2nd best at representing this specific data.
+
+-Hexagon: Probably the best displaying data since you can more clearly see specific areas and what values each one has.
+
+
+
+#How it relates to MAUP counts?
+
+
+-Changing the tessellation to a specific one physically changes how the data is going to be displayed in terms of size.
+
+
+
+#Moving forward you will only use one tessellation, which will you chose and why? While there is not “right” answer, justify your selection here.
+
+
+- Personally, I like the hexagon tessellation simply because of how it displays data and because it is easier for me to read the data better since all areas are represented the same with the same sized hexagon kind of like with the grid tessilation.
+
+
+
+# Question 4: 
+#### Step 4.1 
+```{r}
+dams_of_interest = dam_data %>% 
+  filter(grepl("T", PURPOSES) | grepl("C", PURPOSES) | grepl("D", PURPOSES) | grepl("G", PURPOSES))
+
+doi_hex = point_in_polygon(dams_of_interest, conus_hex, "id")
+
+doi_vor = point_in_polygon(dams_of_interest, conus_vor, "id")
+```
+
+
+
+#### Step 4.2 
+```{r}
+plot_counts(doi_hex, "Number of Specific Dams Per Area: Hexagonal") + 
+  gghighlight::gghighlight(n > mean(n)+sd(n))
+
+plot_counts(doi_vor, "Number of Specific Dams Per Area: Voronoi") + 
+  gghighlight::gghighlight(n > mean(n)+sd(n))
+```
+#### Step 4.3
+Comment of geographic distribution of dams you found. Does it make sense? How might the tessellation you chose impact your findings? How does the distribution of dams coiencide with other geogaphic factors such as river systems, climate, ect?
+
+
+- Just by comparing the hexagon to voroni tessilation map, one can see that the hexagon tessilation displays the overall dams data better since all the hexagons are of equal size and therefore a little easier to pinpoint where all the dams data I specified is centered around. Also just by looking at the two maps now, one can see that although the hexagon tessilation map has fewer dams on it, all of the dams it does have on it seem to display where most of the dams are primarily located on this map.
+
+Since some of the ones I choose included debris flow dams and flood control dams, I first noticed that they both seem to be located not in the Mississippi River but near it on other smaller rivers which all eventually flood into the Mississippi River. My guess from this is that since there are a lot of these specific kinds of dams located around but not on the Mississippi River, it leads me to believe that the Mississippi River might not have as many types of these specific dams and because of this, others rivers flowing into it might have these dams located there to ensure that the Mississippi River has a fewer chance of flooding.
+
+
+
+## Extra Credit: 
+
+
+# Libraries
+
+### SPDS
+```{r, message=FALSE}
+library(tidyverse)
+library(sf)
+library(units)
+```
+
+### Data
+```{r, message=FALSE}
+library(USAboundaries)
+library(rnaturalearth)
+```
+
+### Visualization
+```{r, message=FALSE}
+library(gghighlight)
+library(ggrepel)
+library(ggthemes)
+library(knitr)
+library(kableExtra)
+library(leaflet)
+library(readxl)
+```
+
+
+#### Step 1.1
+```{r, message=FALSE, warning=FALSE}
+majorrivers = read_sf("../../geog176A-daily-exercises/data/MajorRivers.dbf") %>% 
+  filter(SYSTEM == "Mississippi") %>%
+  mutate(STATE = c("AR", "MI", "MO", "OH")) %>% 
+  st_transform(4326)
+```
+
+#### Step 1.2
+```{r, message=FALSE, warning=FALSE}
+dams_of_interest = read_xlsx("../data/NID2019_U.xlsx") %>% 
+  filter(!is.na(LATITUDE)) %>% 
+  filter(grepl("H", PURPOSES)) %>%
+  filter(DAM_NAME != "SOO LOCKS") %>% 
+  select(DAM_NAME, PURPOSES, NID_STORAGE, YEAR_COMPLETED, STATE, LONGITUDE, LATITUDE) %>% 
+  st_as_sf(coords = c("LONGITUDE", "LATITUDE"), crs=4326) %>%
+  st_transform(st_crs(majorrivers)) %>% 
+  group_by(STATE) %>% 
+  slice_max(NID_STORAGE, n=1) %>% 
+  ungroup()
+```
+
+#### Step 1.3
+```{r}
+leaflet() %>% 
+  addProviderTiles(providers$CartoDB.Voyager) %>% 
+  addPolylines(data = majorrivers) %>% 
+  addCircleMarkers(data = dams_of_interest,
+             fillColor  = ~colorQuantile("YlOrRd", NID_STORAGE)(NID_STORAGE),
+             color = NA,
+             fillOpacity = .5,
+             radius = ~NID_STORAGE / 1500000,
+             label = ~DAM_NAME,
+             popup = leafpop::popupTable(st_drop_geometry(dams_of_interest), feature.id = FALSE, row.numbers = FALSE)) %>% 
+  addMeasure() %>% 
+  leafem::addMouseCoordinates()
+```
