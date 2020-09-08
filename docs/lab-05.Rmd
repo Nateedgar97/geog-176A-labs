@@ -236,9 +236,11 @@ plot_copy = (plot_rsum[plot_rsum == 0] = NA)
 plot(plot_rsum, col = blues9)
 
 ```
-Why is our raster STACK, comprised of 6 RASTERS, have values ranging from 6 to 0? 
 
 
+#### Why is our raster STACK, comprised of 6 RASTERS, have values ranging from 6 to 0? 
+
+#### -Perhaps they're an average of the values at that pixel.
 
 
 # Extra Credit:
