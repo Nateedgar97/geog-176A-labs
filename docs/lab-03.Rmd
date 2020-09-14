@@ -8,20 +8,20 @@ output:
 ---
 ## Libraries
 ### SPDS
-```{r, message=FALSE}
+```{r, message=FALSE,warning=FALSE}
 library(tidyverse)
 library(sf)
 library(units)
 ```
 
 ### Data
-```{r, message=FALSE}
+```{r, message=FALSE,warning=FALSE}
 library(USAboundaries)
 library(rnaturalearth)
 ```
 
 ### Visualization
-```{r, message=FALSE}
+```{r, message=FALSE,warning=FALSE}
 library(gghighlight)
 library(ggrepel)
 library(ggthemes)
@@ -30,14 +30,14 @@ library(kableExtra)
 ```
 
 ### Creating a common projected crs
-```{r}
+```{r, message=FALSE,warning=FALSE}
 projcs = "+proj=eqdc +lat_0=40 +lon_0=-96 +lat_1=20 +lat_2=60 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs"
 ```
 
 ## Question 1
 #### Creating the three necessary databases
 The first part of this question was done previously, by installing the correct packages to use. 
-```{r, message=FALSE}
+```{r, message=FALSE,warning=FALSE}
 region = data.frame(state_name = state.name,
                     region = state.region)
 
@@ -60,7 +60,7 @@ cities = read_csv("../data/uscities.csv") %>%
 
 After creating the main databases, I narrowed them down to calculate distances later. I'm sure there's a better way to do this but for the time being this will work just fine.
 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 wldboundaries_can = wldboundaries %>% 
   filter(admin %in% c("Canada"))
 
@@ -70,7 +70,7 @@ wldboundaries_mex = wldboundaries %>%
 
 This data set calls for the conterminous United States which are all the states South of Canada and North of Mexico. The & sign tells R to filter rows that are of jurisdiction type state, and are not called Alaska or Hawaii. st_crs shows us the current coordinate reference system being used. We can see it's user defined (by the projcs variable created earlier). 
 
-```{r, include=FALSE, message=FALSE}
+```{r, include=FALSE, message=FALSE, warning=FALSE}
 st_crs(usboundaries)
 st_crs(wldboundaries)
 st_crs(cities)
@@ -83,7 +83,7 @@ st_crs(cities)
 Here I mainly used the combine function, for the purposes of this lab I don't really see the need to use a union
 
 Unions:
-```{r}
+```{r, message=FALSE,warning=FALSE}
 usboundaries_un = st_union(usboundaries) %>% 
   st_cast("MULTILINESTRING")
 
@@ -92,7 +92,7 @@ wldboundaries_un = st_union(wldboundaries) %>%
 ```
 
 Combines:
-```{r}
+```{r, message=FALSE,warning=FALSE}
 usboundaries_com = st_combine(usboundaries) %>% 
   st_cast("MULTILINESTRING")
 
@@ -107,7 +107,7 @@ wldboundaries_mex_com = st_combine(wldboundaries_mex) %>%
 ```
 
 Not sure why but I had to transform the coordinate systems to EPSG 5070 again
-```{r}
+```{r, message=FALSE,warning=FALSE}
 usboundaries_com = st_transform(usboundaries_com, projcs)
 wldboundaries_un = st_transform(wldboundaries_un, projcs)
 wldboundaries_com = st_transform(wldboundaries_com, projcs)
@@ -118,7 +118,7 @@ cities = st_transform(cities, projcs)
 
 ### Distance Calculations
 Remember to make sure the distance calculations are all within the cities data.frame
-```{r}
+```{r, message=FALSE,warning=FALSE}
 cities = cities %>% 
   mutate(dist_to_state = st_distance(., usboundaries_com),
          dist_to_state = set_units(dist_to_state, "km"),
@@ -135,7 +135,7 @@ cities = cities %>%
 ```
 
 Narrowing down certain cities for later
-```{r}
+```{r, message=FALSE,warning=FALSE}
 cities_big = cities %>% 
   group_by(state_name) %>% 
   slice_max(population, n=1) %>% 
@@ -153,7 +153,7 @@ big_cities_160km = cities_160km %>%
 ```
 
 #### Distance to Borders
-```{r}
+```{r, message=FALSE,warning=FALSE}
 top5far_cites = cities %>% 
   slice_max(dist_to_bor, n=5) %>% 
   select(city, state_name, dist_to_bor) %>% 
@@ -167,7 +167,7 @@ table1 = kable(top5far_cites,
 ```
 
 #### Distances to a State Border
-```{r}
+```{r, message=FALSE,warning=FALSE}
 top5state_cites = cities %>% 
   slice_max(dist_to_state, n=5) %>% 
   select(city, state_name, dist_to_state) %>% 
@@ -180,7 +180,7 @@ table2 = kable(top5state_cites,
 ```
 
 #### Distance to Mexico Border
-```{r}
+```{r, message=FALSE,warning=FALSE}
 top5mex_cites = cities %>% 
   slice_max(dist_to_mex, n=5) %>% 
   select(city, state_name, dist_to_mex) %>% 
@@ -194,7 +194,7 @@ table3 = kable(top5mex_cites,
 ```
  
 #### Distance to Canada Border
-```{r}
+```{r, message=FALSE,warning=FALSE}
 top5can_cites = cities %>% 
   slice_max(dist_to_can, n=5) %>% 
   select(city, state_name, dist_to_can) %>% 
@@ -208,7 +208,7 @@ table4 = kable(top5can_cites,
 ```
 
 #### All table results
-```{r}
+```{r, message=FALSE,warning=FALSE}
 table1
 table2
 table3
@@ -219,7 +219,7 @@ table4
 ### Plots and Maps
 
 #### 10 Largest Cities in the US
-```{r}
+```{r, message=FALSE,warning=FALSE}
 cities_top10 = cities %>% 
   slice_max(population, n=10)
 
@@ -238,14 +238,14 @@ ggplot()+
 
 #### City Distance from a Coastal Border
 Rewrite borders data.frame to include sf for labels (i.e. don't drop geometry):
-```{r}
+```{r, message=FALSE,warning=FALSE}
 top5far_map = cities %>% 
   slice_max(dist_to_bor, n=5)
 ```
 
 I'm assuming this is meant to be distance to an oceanic border, if not simply change the dist_to_bor variable in the cities data.frame to usr the combination of world boundaries rather than the union.
 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 ggplot() +
   geom_sf(data = cities, aes(col = dist_to_bor), size = .3) + 
   geom_sf(data = top5far_map, color = "red", size = 1) + 
@@ -262,12 +262,12 @@ ggplot() +
 
 #### City distance from a State Border
 Rewrite states data.frame to include sf (i.e. don't drop geometry):
-```{r}
+```{r, message=FALSE,warning=FALSE}
 top5state_map = cities %>% 
   slice_max(dist_to_state, n=5)
 ```
 #### City Map
-```{r}
+```{r, message=FALSE,warning=FALSE}
 ggplot() + 
   geom_sf(data = cities, aes(col = dist_to_state), size = .3) + 
   scale_color_gradient(low = "gray", high = "blue") +
@@ -288,7 +288,7 @@ Each dot is representative of one city. Grey dots are closer to state lines whil
 
 #### Equidistant boundary from Mexico to Canada
 Here we have to mutate the distances using an absolute value (you'll see why in the code). We have to find all the cities that are equal distant from both the Canadian and Mexican border. This should highlight all the cities in the center of the US. 
-```{r, message=FALSE}
+```{r, message=FALSE,warning=FALSE}
 km_100eqd = cities %>% 
   mutate(km100 = abs(dist_to_can - dist_to_mex))
 
@@ -321,7 +321,7 @@ There are 10,163 cities in the 100 mile danger zone.
 
 #### How many people live in a city within 100 miles of the border?
 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 popcount = cities_160km %>%
   st_drop_geometry %>% 
   summarise(population) %>% 
@@ -333,7 +333,7 @@ There are 227,369,789 people living in the 100 mile danger zone.
 
 #### What percentage of the total population is in this zone?
 There are an estimated 328.2 million people in the USA as of 2019.
-```{r}
+```{r, message=FALSE,warning=FALSE}
 percent = popcount/328200000
 
 percent
@@ -343,7 +343,7 @@ About 69% of the population lives within the 100 mile danger zone (2/3 is 67%)
 #### Does it match the ACLU estimate in the link above?
 ACLU reports about 2/3s of the population. This is 67% as stated previously. We calculated that 69% of the population lives in this zone. This means ACLU has a 2% data error, which is scientifically acceptable.
 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 tablesub = data.frame(num_cities = 10163,
                       pop = popcount,
                       per = percent,
@@ -358,7 +358,7 @@ kabletab
 ```
 
 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 dgzn = cities_160km %>% 
   group_by(state_name) %>% 
   slice_max(population, n=1) %>% 
@@ -379,7 +379,7 @@ ggplot() +
     size = 3)
 ```
 
-```{r, message=FALSE, echo=FALSE}
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
 
 ```
 Our 4th amendment protects us from random searches and seizures by the police. However, this was amended to exclude any persons living within 100 miles of a border. In this 100-mile zone, Border Patrol agents have certain additional authorities. For instance, Border Patrol can operate immigration checkpoints. Border Patrol, nevertheless, cannot pull anyone over without "reasonable suspicion" of an immigration violation or crime (reasonable suspicion is more than just a "hunch"). Similarly, Border Patrol cannot search vehicles in the 100-mile zone without a warrant or "probable cause" (a reasonable belief, based on the circumstances, that an immigration violation or crime has likely occurred). In practice, Border Patrol agents routinely ignore or misunderstand the limits of their legal authority in the course of individual stops, resulting in violations of the constitutional rights of innocent people. These problems are compounded by inadequate training for Border Patrol agents, a lack of oversight by CBP and the U.S. Department of Homeland Security, and the consistent failure of CBP to hold agents accountable for abuse. No matter what CBP officers and Border Patrol agents think, our Constitution applies throughout the United States, including within this “100-mile border zone.” More information can be found [here](https://www.aclu.org/other/constitution-100-mile-border-zone). This is a list of all the major cities that fall with in this zone:
