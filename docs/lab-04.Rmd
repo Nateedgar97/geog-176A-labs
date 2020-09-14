@@ -10,21 +10,21 @@ output:
 # Libraries
 
 ### SPDS
-```{r, message=FALSE}
+```{r, message=FALSE,warning=FALSE}
 library(tidyverse)
 library(sf)
 library(units)
 ```
 
 ### Data
-```{r, message=FALSE}
+```{r, message=FALSE,warning=FALSE}
 library(USAboundaries)
 library(rnaturalearth)
 library(rmapshaper)
 ```
 
 ### Visualization
-```{r, message=FALSE}
+```{r, message=FALSE,warning=FALSE}
 library(gghighlight)
 library(ggrepel)
 library(ggthemes)
@@ -37,7 +37,7 @@ library(readxl)
 
 #### Step 1.1
 Getting CONUS States
-```{r}
+```{r, message=FALSE,warning=FALSE}
 conus = USAboundaries::us_counties() %>% 
   filter(!state_name %in% c("Hawaii", "Puerto Rico", "Alaska",
              "Guam", "District of Columbia")) %>% 
@@ -45,7 +45,7 @@ conus = USAboundaries::us_counties() %>%
 ```
  
 #### Step 1.2 & 1.5
-```{r}
+```{r, message=FALSE,warning=FALSE}
 conus_com = conus %>% 
   st_combine() %>% 
   st_transform(5070)
@@ -62,7 +62,7 @@ conus_un=conus %>%
 
 
 #### Step 1.3 & Step 1.4 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 conus_vor = conus_cent %>% #1.3
   st_voronoi() %>% 
   st_cast() %>% 
@@ -93,7 +93,7 @@ conus_hex = conus %>%
 ```
 
 #### Step 1.6 - FUNCTION JUNCTION
-```{r}
+```{r, message=FALSE,warning=FALSE}
 plot_tes = function(arg1, title){
   ggplot() + 
     geom_sf(data = arg1, col = "white", size = .2) + 
@@ -106,7 +106,7 @@ plot_tes = function(arg1, title){
 ```
 
 #### Step 1.7
-```{r}
+```{r, message=FALSE,warning=FALSE}
 plot_tes(conus, "Original")
 plot_tes(conus_vor, "Voroni")
 plot_tes(conus_tri, "Triangualtion")
@@ -117,7 +117,7 @@ plot_tes(conus_hex, "Hexegonal")
 
 # Question 2: Tesselation of Surfaces
 #### Step 2.1 - FUNCTION JUNCTION PART 2
-```{r}
+```{r, message=FALSE,warning=FALSE}
 sum_tes = function(arg1, string){
   
   newframe = arg1 %>% 
@@ -136,7 +136,7 @@ sum_tes = function(arg1, string){
 ```
 
 #### Step 2.2
-```{r}
+```{r, message=FALSE,warning=FALSE}
 sum_tes(conus, "original")
 sum_tes(conus_vor, "voronoi")
 sum_tes(conus_tri, "triangualtion")
@@ -145,7 +145,7 @@ sum_tes(conus_hex, "hexegonal")
 ```
 
 #### Step 2.3
-```{r}
+```{r, message=FALSE,warning=FALSE}
 tess_summary = bind_rows(
   sum_tes(conus, "original"),
   sum_tes(conus_vor, "voronoi"),
@@ -155,7 +155,7 @@ tess_summary = bind_rows(
 ```
 
 #### Step 2.4
-```{r}
+```{r, message=FALSE,warning=FALSE}
 kable(tess_summary,
              col.names = c("Type", "Number of Features", "Mean Area", "St. Dev", "Total Area"),
              caption = "Summary of Our 5 Tesselations") %>% 
@@ -186,7 +186,7 @@ dam_data = read_excel("../data/NID2019_U.xlsx") %>%
 ```
 
 #### Step 3.2
-```{r}
+```{r, message=FALSE,warning=FALSE}
 point_in_polygon = function(points, polygon, arg3){
   st_join(polygon, points) %>% 
     st_drop_geometry() %>% 
@@ -198,7 +198,7 @@ point_in_polygon = function(points, polygon, arg3){
 ```
 
 #### Step 3.3
-```{r}
+```{r, message=FALSE,warning=FALSE}
 conus_counts = point_in_polygon(dam_data, conus, "geoid")
 vor_counts = point_in_polygon(dam_data, conus_vor, "id")
 tri_counts = point_in_polygon(dam_data, conus_tri, "id")
@@ -207,7 +207,7 @@ hex_counts = point_in_polygon(dam_data, conus_hex, "id")
 ```
 
 #### Step 3.4
-```{r}
+```{r, message=FALSE,warning=FALSE}
 plot_counts = function(arg1, title){
   ggplot() + 
     geom_sf(data = arg1, aes(fill = n), col = NA) + 
@@ -221,7 +221,7 @@ plot_counts = function(arg1, title){
 
 
 #### Step 3.5
-```{r}
+```{r, message=FALSE,warning=FALSE}
 plot_counts(conus_counts, "Number of Dams: Original Display")
 plot_counts(vor_counts, "Number of Dams: Voronoi Display")
 plot_counts(tri_counts, "Number of Dams: Triangulate Display")
@@ -262,7 +262,7 @@ plot_counts(hex_counts, "Number of Dams: Hexagon Display")
 
 # Question 4: 
 #### Step 4.1 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 dams_of_interest = dam_data %>% 
   filter(grepl("T", PURPOSES) | grepl("C", PURPOSES) | grepl("D", PURPOSES) | grepl("G", PURPOSES))
 
@@ -274,7 +274,7 @@ doi_vor = point_in_polygon(dams_of_interest, conus_vor, "id")
 
 
 #### Step 4.2 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 plot_counts(doi_hex, "Number of Specific Dams Per Area: Hexagonal") + 
   gghighlight::gghighlight(n > mean(n)+sd(n))
 
@@ -297,20 +297,20 @@ Since some of the ones I choose included debris flow dams and flood control dams
 # Libraries
 
 ### SPDS
-```{r, message=FALSE}
+```{r, message=FALSE,warning=FALSE}
 library(tidyverse)
 library(sf)
 library(units)
 ```
 
 ### Data
-```{r, message=FALSE}
+```{r, message=FALSE,warning=FALSE}
 library(USAboundaries)
 library(rnaturalearth)
 ```
 
 ### Visualization
-```{r, message=FALSE}
+```{r, message=FALSE,warning=FALSE}
 library(gghighlight)
 library(ggrepel)
 library(ggthemes)
@@ -344,7 +344,7 @@ dams_of_interest = read_xlsx("../data/NID2019_U.xlsx") %>%
 ```
 
 #### Step 1.3
-```{r}
+```{r, message=FALSE,warning=FALSE}
 leaflet() %>% 
   addProviderTiles(providers$CartoDB.Voyager) %>% 
   addPolylines(data = majorrivers) %>% 
