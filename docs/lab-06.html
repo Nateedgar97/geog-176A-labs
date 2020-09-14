@@ -403,20 +403,9 @@ library(elevatr)   # Elevation  Web Tiles</code></pre>
 <h1>Elevation Data</h1>
 <pre class="r"><code>Elevation_Data = elevatr::get_elev_raster(Basin,13) %&gt;% 
   crop(Basin) %&gt;% 
-  mask(Basin)</code></pre>
-<pre><code>## Warning in sp::proj4string(locations): CRS object has comment, which is lost in
-## output
+  mask(Basin)
 
-## Warning in sp::proj4string(locations): CRS object has comment, which is lost in
-## output
-
-## Warning in sp::proj4string(locations): CRS object has comment, which is lost in
-## output</code></pre>
-<pre><code>## Mosaicing &amp; Projecting</code></pre>
-<pre><code>## Note: Elevation units are in meters.
-## Note: The coordinate reference system is:
-##  +proj=longlat +datum=WGS84 +no_defs</code></pre>
-<pre class="r"><code>elevation_feet = Elevation_Data * 3.281
+elevation_feet = Elevation_Data * 3.281
 
 writeRaster(elevation_feet,&quot;../data/elev_raster_feet.tif&quot;, overwrite = TRUE)
 # Do overwrite to not get multiply copies after each run.</code></pre>
@@ -433,22 +422,13 @@ Stream = osmdata::add_osm_feature(opq(Basin),&quot;waterway&quot;,&quot;stream&q
 <div id="buildings-and-river-network-data-2" class="section level1">
 <h1>Buildings and river-network data (2)</h1>
 <pre class="r"><code>Centroid = st_centroid(Building$osm_polygons) %&gt;% 
-  st_intersection(Basin) </code></pre>
-<pre><code>## Warning in st_centroid.sf(Building$osm_polygons): st_centroid assumes attributes
-## are constant over geometries of x</code></pre>
-<pre><code>## Warning in st_centroid.sfc(st_geometry(x), of_largest_polygon =
-## of_largest_polygon): st_centroid does not give correct centroids for longitude/
-## latitude data</code></pre>
-<pre><code>## although coordinates are longitude/latitude, st_intersection assumes that they are planar</code></pre>
-<pre><code>## Warning: attribute variables are assumed to be spatially constant throughout all
-## geometries</code></pre>
-<pre class="r"><code>Railroad = dplyr::filter(Centroid, amenity==&quot;railway&quot;)
+  st_intersection(Basin) 
+
+
+Railroad = dplyr::filter(Centroid, amenity==&quot;railway&quot;)
 
 
 Rivers = st_intersection(Stream$osm_lines,Basin) </code></pre>
-<pre><code>## although coordinates are longitude/latitude, st_intersection assumes that they are planar</code></pre>
-<pre><code>## Warning: attribute variables are assumed to be spatially constant throughout all
-## geometries</code></pre>
 </div>
 <div id="terrain-analysis-1" class="section level1">
 <h1>Terrain Analysis (1)</h1>
@@ -456,7 +436,7 @@ Rivers = st_intersection(Stream$osm_lines,Basin) </code></pre>
 <div id="for-hillshade" class="section level1">
 <h1>For Hillshade</h1>
 <pre class="r"><code>wbt_hillshade(&quot;../data/elev_raster_feet.tif&quot;, &quot;../data/terrian-near-flood-hillshade.tif&quot;)</code></pre>
-<pre><code>## [1] &quot;hillshade - Elapsed Time (excluding I/O): 0.16s&quot;</code></pre>
+<pre><code>## [1] &quot;hillshade - Elapsed Time (excluding I/O): 0.24s&quot;</code></pre>
 <pre class="r"><code>Hillshade = raster(&quot;../data/terrian-near-flood-hillshade.tif&quot;)
 #read in raster above
 plot(Hillshade, col= gray.colors(256, alpha = .5), legend=FALSE)
@@ -484,7 +464,7 @@ plot(Rivers$geometry,add=TRUE)</code></pre>
 <div id="creating-the-hydrologically-corrected-surface" class="section level1">
 <h1>Creating the hydrologically corrected surface</h1>
 <pre class="r"><code>wbt_breach_depressions(&quot;../data/elev_raster_feet.tif&quot;, &quot;../data/breach_depressions.tif&quot;)</code></pre>
-<pre><code>## [1] &quot;breach_depressions - Elapsed Time (excluding I/O): 0.142s&quot;</code></pre>
+<pre><code>## [1] &quot;breach_depressions - Elapsed Time (excluding I/O): 0.169s&quot;</code></pre>
 </div>
 <div id="terrain-analysis-4" class="section level1">
 <h1>Terrain Analysis (4)</h1>
@@ -492,7 +472,7 @@ plot(Rivers$geometry,add=TRUE)</code></pre>
 <div id="creating-the-hand-raster" class="section level1">
 <h1>Creating the HAND raster</h1>
 <pre class="r"><code>wbt_elevation_above_stream(&quot;../data/breach_depressions.tif&quot;,&quot;../data/River.tif&quot;, &quot;../data/Elevation_above_stream.tif&quot;)</code></pre>
-<pre><code>## [1] &quot;elevation_above_stream - Elapsed Time (excluding I/O): 0.42s&quot;</code></pre>
+<pre><code>## [1] &quot;elevation_above_stream - Elapsed Time (excluding I/O): 0.71s&quot;</code></pre>
 </div>
 <div id="terrain-analysis-5" class="section level1">
 <h1>Terrain Analysis (5)</h1>
@@ -565,11 +545,8 @@ plot(Basin$geometry, add = TRUE, border = &quot;black&quot;)</code></pre>
 <h1>Flood Inudation Map library</h1>
 <pre class="r"><code>sb = AOI::aoi_get(&quot;Santa Barbara&quot;)
 gif_flood = crop(Flood2017, sb) # cropping by comparing raster to vector
-basin_clip = st_intersection(Basin, sb) # cropping by comparing vector to vector</code></pre>
-<pre><code>## although coordinates are longitude/latitude, st_intersection assumes that they are planar</code></pre>
-<pre><code>## Warning: attribute variables are assumed to be spatially constant throughout all
-## geometries</code></pre>
-<pre class="r"><code>hill_crop = crop(Hillshade, sb)
+basin_clip = st_intersection(Basin, sb) # cropping by comparing vector to vector
+hill_crop = crop(Hillshade, sb)
 
 #Gif Creation
 gifski::save_gif({

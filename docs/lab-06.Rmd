@@ -7,7 +7,7 @@ output:
     theme: journal
 ---
 
-```{r, message=FALSE}
+```{r, message=FALSE,warning=FALSE}
 library(sf)        # vector manipulation
 library(raster)    # raster manipulation
 library(fasterize) # "faster" raster
@@ -32,7 +32,7 @@ Basin = read_sf("https://labs.waterdata.usgs.gov/api/nldi/linked-data/nwissite/U
 
 
 # Elevation Data
-```{r}
+```{r,message=FALSE,warning=FALSE}
 
 Elevation_Data = elevatr::get_elev_raster(Basin,13) %>% 
   crop(Basin) %>% 
@@ -48,7 +48,7 @@ writeRaster(elevation_feet,"../data/elev_raster_feet.tif", overwrite = TRUE)
 
 
 # Buildings and river-network data (1)
-```{r}
+```{r, message=FALSE,warning=FALSE}
 
 Building = osmdata::add_osm_feature(opq(Basin),"building") %>% 
   osmdata_sf()
@@ -63,7 +63,7 @@ Stream = osmdata::add_osm_feature(opq(Basin),"waterway","stream") %>% osmdata_sf
 
 
 # Buildings and river-network data (2)
-```{r}
+```{r,message=FALSE,warning=FALSE}
 
 Centroid = st_centroid(Building$osm_polygons) %>% 
   st_intersection(Basin) 
@@ -80,7 +80,7 @@ Rivers = st_intersection(Stream$osm_lines,Basin)
 
 # Terrain Analysis (1)
 # For Hillshade
-```{r}
+```{r,message=FALSE,warning=FALSE}
 
 wbt_hillshade("../data/elev_raster_feet.tif", "../data/terrian-near-flood-hillshade.tif")
 
@@ -95,7 +95,7 @@ plot(Rivers$geometry,add=TRUE)
 # Terrain Analysis (2)
 # Height Above Nearest Drainage
 # Creating the river raster
-```{r}
+```{r,message=FALSE,warning=FALSE}
 
 River = st_transform(Rivers,5070) %>% 
   st_buffer(10) %>%
@@ -109,7 +109,7 @@ River = st_transform(Rivers,5070) %>%
 
 # Terrain Analysis (3)
 # Creating the hydrologically corrected surface
-```{r}
+```{r,message=FALSE,warning=FALSE}
 
 wbt_breach_depressions("../data/elev_raster_feet.tif", "../data/breach_depressions.tif")
 
@@ -119,7 +119,7 @@ wbt_breach_depressions("../data/elev_raster_feet.tif", "../data/breach_depressio
 
 # Terrain Analysis (4)
 # Creating the HAND raster
-```{r}
+```{r,message=FALSE,warning=FALSE}
 
 wbt_elevation_above_stream("../data/breach_depressions.tif","../data/River.tif", "../data/Elevation_above_stream.tif")
 
@@ -129,7 +129,7 @@ wbt_elevation_above_stream("../data/breach_depressions.tif","../data/River.tif",
 
 # Terrain Analysis (5)
 # Correcting to local reference datum
-```{r}
+```{r,message=FALSE,warning=FALSE}
 
 #read in raster for HAND & add the offset (3.69) to the entire HAND raster
 
@@ -157,7 +157,7 @@ writeRaster(Hand_raster,"../data/Corrected_tif.tif", overwrite=TRUE)
 # 2017 Impact Assessment
 # Map the flood & Estimate the impacts
 
-```{r}
+```{r,message=FALSE,warning=FALSE}
 
 # read in the corrected HAND raster
 
@@ -196,7 +196,7 @@ plot(Basin$geometry, add = TRUE, border = "black")
 
 # Extra Credit
 # Flood Inudation Map library
-```{r}
+```{r,message=FALSE,warning=FALSE}
 sb = AOI::aoi_get("Santa Barbara")
 gif_flood = crop(Flood2017, sb) # cropping by comparing raster to vector
 basin_clip = st_intersection(Basin, sb) # cropping by comparing vector to vector

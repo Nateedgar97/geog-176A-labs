@@ -177,7 +177,7 @@ Describe the differences in each tesselation (original, voronoi, triangulation, 
 
 # Question 3: 
 #### Step 3.1 
-```{r, message=FALSE, reults=FALSE}
+```{r, message=FALSE, results=FALSE, warning=FALSE}
 dam_data = read_excel("../data/NID2019_U.xlsx") %>% 
   filter(!is.na(LATITUDE)) %>% 
   st_as_sf(coords = c("LONGITUDE","LATITUDE"), crs=4326) %>% 
