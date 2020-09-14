@@ -7,7 +7,7 @@ output:
     theme: journal
 ---
 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 library(tidyverse)
 library(sf)
 library(raster)
@@ -22,7 +22,7 @@ library(kableExtra)
 
 
 # Question 1:
-```{r}
+```{r, message=FALSE,warning=FALSE}
 bb=read_csv("../data/uscities.csv") %>%
   filter(city=="Palo") %>%
   st_as_sf(coords= c("lng","lat"),crs=4326) %>%
@@ -88,7 +88,7 @@ r=crop(s, cropper)
 
 
 # Question 3:
-```{r}
+```{r, message=FALSE,warning=FALSE}
 par(mfrow=c(1,2))
 #True Color
 plotRGB(r, r=4 ,g=3 ,b=2, stretch= "lin")
@@ -109,7 +109,7 @@ plotRGB(r, r=1 ,g=3 ,b=6, stretch= "hist")
 
 
 # Question 4:
-```{r}
+```{r, message=FALSE,warning=FALSE}
 #Step 1
 
 palette= colorRampPalette(c("blue","white","red"))
@@ -155,7 +155,7 @@ plot(flood5, col= "blue", legend=FALSE)
 
 
 ##### changing NA's to 0s for Q5
-```{r}
+```{r, message=FALSE,warning=FALSE}
 thresholdings1= function(x){ifelse(x <= 0,1,0)}
 thresholdings2= function(x){ifelse(x >= 0,1,0)} 
 thresholdings3= function(x){ifelse(x >= 0,1,0)} 
@@ -170,7 +170,7 @@ floods5= calc(swi,thresholdings5)
 
 
 # Question 5:
-```{r}
+```{r, message=FALSE,warning=FALSE}
   #1. Split raster data/structure into just data
   #2. Calculate KMeans clustering on data
   #3. Add clustered data to original raster structure
@@ -194,7 +194,7 @@ plot(kmeans_raster, col = viridis::plasma(12))
 ```
 
 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 #Step 5.3
 
 com_table = table(values(floods2), values(kmeans_raster))
@@ -211,7 +211,7 @@ plot(floodst)
 
 
 # Question 6:
-```{r}
+```{r, message=FALSE,warning=FALSE}
 plot_rsum = sum(floodst)
 
 raster_stats = cellStats(floodst, stat=sum)*res(floodst)^2/1e6 #showing area covered in km&2
@@ -219,19 +219,19 @@ raster_stats = cellStats(floodst, stat=sum)*res(floodst)^2/1e6 #showing area cov
 ```
 
 #Step 1
-```{r}
+```{r, message=FALSE,warning=FALSE}
 kable(raster_stats, col.names = c("Area Covered"), caption = "Area Covered by each classification") %>%
   kable_styling(bootstrap_options = "striped", full_width = F)
 
 ```
 
 # Step 2
-```{r}
+```{r, message=FALSE,warning=FALSE}
 plot(plot_rsum, col = blues9)
 
 ```
 # Step 3
-```{r}
+```{r, message=FALSE,warning=FALSE}
 plot_copy = (plot_rsum[plot_rsum == 0] = NA)
 plot(plot_rsum, col = blues9)
 
@@ -245,7 +245,7 @@ plot(plot_rsum, col = blues9)
 
 # Extra Credit:
 # Used mapview from previous question to identify area of interest
-```{r}
+```{r, message=FALSE,warning=FALSE}
 aoi = st_point(c(-91.78946, 42.06303)) %>% 
   st_sfc(crs = 4326) %>% 
   st_sf() %>% 
