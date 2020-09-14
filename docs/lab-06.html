@@ -436,7 +436,7 @@ Rivers = st_intersection(Stream$osm_lines,Basin) </code></pre>
 <div id="for-hillshade" class="section level1">
 <h1>For Hillshade</h1>
 <pre class="r"><code>wbt_hillshade(&quot;../data/elev_raster_feet.tif&quot;, &quot;../data/terrian-near-flood-hillshade.tif&quot;)</code></pre>
-<pre><code>## [1] &quot;hillshade - Elapsed Time (excluding I/O): 0.24s&quot;</code></pre>
+<pre><code>## [1] &quot;hillshade - Elapsed Time (excluding I/O): 0.25s&quot;</code></pre>
 <pre class="r"><code>Hillshade = raster(&quot;../data/terrian-near-flood-hillshade.tif&quot;)
 #read in raster above
 plot(Hillshade, col= gray.colors(256, alpha = .5), legend=FALSE)
@@ -464,7 +464,7 @@ plot(Rivers$geometry,add=TRUE)</code></pre>
 <div id="creating-the-hydrologically-corrected-surface" class="section level1">
 <h1>Creating the hydrologically corrected surface</h1>
 <pre class="r"><code>wbt_breach_depressions(&quot;../data/elev_raster_feet.tif&quot;, &quot;../data/breach_depressions.tif&quot;)</code></pre>
-<pre><code>## [1] &quot;breach_depressions - Elapsed Time (excluding I/O): 0.169s&quot;</code></pre>
+<pre><code>## [1] &quot;breach_depressions - Elapsed Time (excluding I/O): 0.265s&quot;</code></pre>
 </div>
 <div id="terrain-analysis-4" class="section level1">
 <h1>Terrain Analysis (4)</h1>
@@ -472,7 +472,7 @@ plot(Rivers$geometry,add=TRUE)</code></pre>
 <div id="creating-the-hand-raster" class="section level1">
 <h1>Creating the HAND raster</h1>
 <pre class="r"><code>wbt_elevation_above_stream(&quot;../data/breach_depressions.tif&quot;,&quot;../data/River.tif&quot;, &quot;../data/Elevation_above_stream.tif&quot;)</code></pre>
-<pre><code>## [1] &quot;elevation_above_stream - Elapsed Time (excluding I/O): 0.71s&quot;</code></pre>
+<pre><code>## [1] &quot;elevation_above_stream - Elapsed Time (excluding I/O): 0.48s&quot;</code></pre>
 </div>
 <div id="terrain-analysis-5" class="section level1">
 <h1>Terrain Analysis (5)</h1>
