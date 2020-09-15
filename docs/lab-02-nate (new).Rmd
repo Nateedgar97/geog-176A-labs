@@ -7,7 +7,7 @@ output:
     theme: flatly
 ---
 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 #Question:1
 
 #Step 1
@@ -17,7 +17,7 @@ library(tidyverse)
 covid=read_csv("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv")
 ```
 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 # Step 2
 # Making A Subset That Filters The Data To California And Added A New Column (Mutate) With The Daily New Cases Using Either diff or lag.
 
@@ -68,7 +68,7 @@ j1 = left_join(covid, PopulationEstimates, by = "fips")
 #Step 9
 #Number Of Cases In The Last 14 Days Per 100,000 
 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 last14 = j1 %>% 
   filter(state ==c("California")) %>% 
   group_by(county, date) %>% 
@@ -83,7 +83,7 @@ last14 = j1 %>%
   filter(per100 <= 100)
 ```
 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 #Question 2
 
 #Question 2:In this question, we are going to look at the story of 4 states and the impact scale can have on data interpretation. The states include: New York, California, Louisiana, and Florida.Your task is to make a faceted bar plot showing the number of daily, new cases at the state level.
@@ -102,7 +102,7 @@ fourStates=covid %>%
 
 ```
 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 #Step 2
 
 ggplot(data = fourStates, aes(x = date)) + 
@@ -118,10 +118,10 @@ ggplot(data = fourStates, aes(x = date)) +
 
 ```
 
-```{r}
+```{r, message=FALSE,warning=FALSE}
 new = fourStates %>% left_join(PopulationEstimates, by = c("state" = "Area_Name") ) %>% 
   mutate(perCapNew = newCases / pop2019, 
-         perCap7 = rollmean(perCapNew, 7, fill = NA, align = "center" ))
+         perCap7 = zoo::rollmean(perCapNew, 7, fill = NA, align = "center" ))
 
 
 ggplot(data = new, aes(x = date)) + 
