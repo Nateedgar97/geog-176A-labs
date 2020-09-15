@@ -6,7 +6,7 @@ output:
   html_document:
     theme: journal
 ---
-## Libraries
+# Libraries
 ### SPDS
 ```{r, message=FALSE,warning=FALSE}
 library(tidyverse)
@@ -204,7 +204,6 @@ table4 = kable(top5can_cites,
              col.names = c("City", "State", "Distance from Canadian Border"),
              caption = "Top 5 Cities Furthest from the Canadian Border") %>% 
          kable_styling(bootstrap_options = "striped", full_width = F)
-
 ```
 
 #### All table results
@@ -334,7 +333,7 @@ There are 227,369,789 people living in the 100 mile danger zone.
 #### What percentage of the total population is in this zone?
 There are an estimated 328.2 million people in the USA as of 2019.
 ```{r, message=FALSE,warning=FALSE}
-percent = popcount/328200000
+percent = (popcount/328200000)*100
 
 percent
 ```
@@ -370,7 +369,7 @@ ggplot() +
   geom_sf(data = cities_160km, color = "red", size = .75) + 
   geom_sf(data = big_cities_160km, color = "green") + 
   labs(title ="Cities with in the 100 mile border zone",
-       caption = "The red dots on the map represent cities with in the 100 mile border zone. Green dots are these same major cities, but those that fall with in the 100 mile radius.") + 
+       caption = "The dots on the map represent cities with in the 100 mile border zone (red) and major cities that fall in the 100 mile radius (green).") + 
   ggthemes::theme_map() +
   ggrepel::geom_label_repel(
     data = dgzn, 
@@ -379,8 +378,5 @@ ggplot() +
     size = 3)
 ```
 
-```{r, message=FALSE, echo=FALSE, warning=FALSE}
-
-```
 Our 4th amendment protects us from random searches and seizures by the police. However, this was amended to exclude any persons living within 100 miles of a border. In this 100-mile zone, Border Patrol agents have certain additional authorities. For instance, Border Patrol can operate immigration checkpoints. Border Patrol, nevertheless, cannot pull anyone over without "reasonable suspicion" of an immigration violation or crime (reasonable suspicion is more than just a "hunch"). Similarly, Border Patrol cannot search vehicles in the 100-mile zone without a warrant or "probable cause" (a reasonable belief, based on the circumstances, that an immigration violation or crime has likely occurred). In practice, Border Patrol agents routinely ignore or misunderstand the limits of their legal authority in the course of individual stops, resulting in violations of the constitutional rights of innocent people. These problems are compounded by inadequate training for Border Patrol agents, a lack of oversight by CBP and the U.S. Department of Homeland Security, and the consistent failure of CBP to hold agents accountable for abuse. No matter what CBP officers and Border Patrol agents think, our Constitution applies throughout the United States, including within this “100-mile border zone.” More information can be found [here](https://www.aclu.org/other/constitution-100-mile-border-zone). This is a list of all the major cities that fall with in this zone:
 

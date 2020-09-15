@@ -31,6 +31,7 @@ library(ggthemes)
 library(knitr)
 library(kableExtra)
 library(readxl)
+library(leaflet)
 ```
 
 ## Question 1: Tesselation of Surfaces
@@ -136,7 +137,7 @@ sum_tes = function(arg1, string){
 ```
 
 #### Step 2.2
-```{r, message=FALSE,warning=FALSE}
+```{r, message=FALSE,warning=FALSE, eval=FALSE}
 sum_tes(conus, "original")
 sum_tes(conus_vor, "voronoi")
 sum_tes(conus_tri, "triangualtion")
@@ -165,13 +166,13 @@ kable(tess_summary,
 #### Step 2.5
 Describe the differences in each tesselation (original, voronoi, triangulation, etc). 
 
--Original: Its the best represented one but has the greatet standard deviation in sizes (not good for making something  with an equal area)
+ - Original: Its the best represented one but has the greatet standard deviation in sizes (not good for making something  with an equal area)
 
--Voronoi:It has the great variance in the sizes an varies similar to the original(closest to original)
+ - Voronoi:It has the great variance in the sizes an varies similar to the original(closest to original)
 
--Triangulation: It has twice the amount of features and is more accurate but slower to process.
+ - Triangulation: It has twice the amount of features and is more accurate but slower to process.
 
--Square/Trapozoid: It has the least standard devaition and least amount of features since they're the most equally spread out. 
+ - Square/Trapozoid: It has the least standard devaition and least amount of features since they're the most equally spread out. 
 
 
 
@@ -229,34 +230,26 @@ plot_counts(grd_counts, "Number of Dams: Grid Display")
 plot_counts(hex_counts, "Number of Dams: Hexagon Display")
 ```
 
-#### Step 3.6
+#### Step 3.6 
 
-#Comment on the influence of the tessellated surface in the visualization of point counts. 
+##### Commenting on the influence of the tessellated surface in the visualization of point counts:
 
+ - Original: Keeps the data the same in this case showing it per counties.
 
--Original: Keeps the data the same in this case showing it per counties.
+ - Voronoi: 2nd worst in distortion of current data.
 
--Voronoi: 2nd worst in distortion of current data.
+ - Triangulate: Most likely the most distorted in terms of what it's currently displaying.
 
--Triangulate: Most likely the most distorted in terms of what it's currently displaying.
+ - Grid: 2nd best at representing this specific data.
 
--Grid: 2nd best at representing this specific data.
-
--Hexagon: Probably the best displaying data since you can more clearly see specific areas and what values each one has.
-
+ - Hexagon: Probably the best displaying data since you can more clearly see specific areas and what values each one has.
 
 
-#How it relates to MAUP counts?
+##### How it relates to MAUP counts?
 
+ - Changing the tessellation to a specific one physically changes how the data is going to be displayed in terms of size.
 
--Changing the tessellation to a specific one physically changes how the data is going to be displayed in terms of size.
-
-
-
-#Moving forward you will only use one tessellation, which will you chose and why? While there is not “right” answer, justify your selection here.
-
-
-- Personally, I like the hexagon tessellation simply because of how it displays data and because it is easier for me to read the data better since all areas are represented the same with the same sized hexagon kind of like with the grid tessilation.
+Moving forward I only used one tessellation, the hexagon tessellation simply because of how it displays data and because it is easier for me to read the data better since all areas are represented the same with the same sized hexagon kind of like with the grid tesselation.
 
 
 
@@ -281,11 +274,10 @@ plot_counts(doi_hex, "Number of Specific Dams Per Area: Hexagonal") +
 plot_counts(doi_vor, "Number of Specific Dams Per Area: Voronoi") + 
   gghighlight::gghighlight(n > mean(n)+sd(n))
 ```
+
 #### Step 4.3
-Comment of geographic distribution of dams you found. Does it make sense? How might the tessellation you chose impact your findings? How does the distribution of dams coiencide with other geogaphic factors such as river systems, climate, ect?
 
-
-- Just by comparing the hexagon to voroni tessilation map, one can see that the hexagon tessilation displays the overall dams data better since all the hexagons are of equal size and therefore a little easier to pinpoint where all the dams data I specified is centered around. Also just by looking at the two maps now, one can see that although the hexagon tessilation map has fewer dams on it, all of the dams it does have on it seem to display where most of the dams are primarily located on this map.
+Just by comparing the hexagon to Voronoi tessellation map, one can see that the hexagon tessellation displays the overall dams data better since all the hexagons are of equal size and therefore a little easier to pinpoint where all the dams data I specified is centered around. Also just by looking at the two maps now, one can see that although the hexagon tessellation map has fewer dams on it, all of the dams it does have on it seem to display where most of the dams are primarily located on this map.
 
 Since some of the ones I choose included debris flow dams and flood control dams, I first noticed that they both seem to be located not in the Mississippi River but near it on other smaller rivers which all eventually flood into the Mississippi River. My guess from this is that since there are a lot of these specific kinds of dams located around but not on the Mississippi River, it leads me to believe that the Mississippi River might not have as many types of these specific dams and because of this, others rivers flowing into it might have these dams located there to ensure that the Mississippi River has a fewer chance of flooding.
 
@@ -293,33 +285,7 @@ Since some of the ones I choose included debris flow dams and flood control dams
 
 ## Extra Credit: 
 
-
-# Libraries
-
-### SPDS
-```{r, message=FALSE,warning=FALSE}
-library(tidyverse)
-library(sf)
-library(units)
-```
-
-### Data
-```{r, message=FALSE,warning=FALSE}
-library(USAboundaries)
-library(rnaturalearth)
-```
-
-### Visualization
-```{r, message=FALSE,warning=FALSE}
-library(gghighlight)
-library(ggrepel)
-library(ggthemes)
-library(knitr)
-library(kableExtra)
-library(leaflet)
-library(readxl)
-```
-
+I have been asked to identify the largest, at risk, flood control dams in the country.
 
 #### Step 1.1
 ```{r, message=FALSE, warning=FALSE}

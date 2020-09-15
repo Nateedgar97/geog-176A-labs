@@ -6,22 +6,28 @@ output:
   html_document:
     theme: journal
 ---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, out.width = "75%", fig.align = 'center')
+```
 
+# Libraries
 ```{r, message=FALSE,warning=FALSE}
 library(sf)        # vector manipulation
 library(raster)    # raster manipulation
 library(fasterize) # "faster" raster
 library(whitebox)  # terrain analysis
+```
 
-# Data libraries
+### Data Manipulation
+
+```{r}
 library(osmdata)   # OSM API
 library(elevatr)   # Elevation  Web Tiles
-
 ```
 
 
 # Collecting the data needed for the analysis.
-# This includes representations of the elevation grid, the river network, and building structures.
+This includes representations of the elevation grid, the river network, and building structures.
 
 # Basin boundary
 ```{r}
@@ -41,13 +47,11 @@ Elevation_Data = elevatr::get_elev_raster(Basin,13) %>%
 elevation_feet = Elevation_Data * 3.281
 
 writeRaster(elevation_feet,"../data/elev_raster_feet.tif", overwrite = TRUE)
-# Do overwrite to not get multiply copies after each run.
-
 ```
+Overwrite is used to not get multiple copies after each run.
 
 
-
-# Buildings and river-network data (1)
+# Buildings and river-network data
 ```{r, message=FALSE,warning=FALSE}
 
 Building = osmdata::add_osm_feature(opq(Basin),"building") %>% 
@@ -57,13 +61,6 @@ Building = osmdata::add_osm_feature(opq(Basin),"building") %>%
   
 Stream = osmdata::add_osm_feature(opq(Basin),"waterway","stream") %>% osmdata_sf()
 
-```
-
-
-
-
-# Buildings and river-network data (2)
-```{r,message=FALSE,warning=FALSE}
 
 Centroid = st_centroid(Building$osm_polygons) %>% 
   st_intersection(Basin) 
@@ -78,23 +75,25 @@ Rivers = st_intersection(Stream$osm_lines,Basin)
 
 
 
-# Terrain Analysis (1)
-# For Hillshade
-```{r,message=FALSE,warning=FALSE}
+# Terrain Analysis
+
+### For Hillshade
+```{r,message=FALSE,warning=FALSE, eval=FALSE}
 
 wbt_hillshade("../data/elev_raster_feet.tif", "../data/terrian-near-flood-hillshade.tif")
+```
 
+```{r,message=FALSE,warning=FALSE}
 Hillshade = raster("../data/terrian-near-flood-hillshade.tif")
-#read in raster above
+
 plot(Hillshade, col= gray.colors(256, alpha = .5), legend=FALSE)
 plot(Basin$geometry,add=TRUE)
 plot(Rivers$geometry,add=TRUE)
-
 ```
+Had to read in raster using `raster`
 
-# Terrain Analysis (2)
-# Height Above Nearest Drainage
-# Creating the river raster
+### Height Above Nearest Drainage
+##### Creating the river raster
 ```{r,message=FALSE,warning=FALSE}
 
 River = st_transform(Rivers,5070) %>% 
@@ -105,104 +104,98 @@ River = st_transform(Rivers,5070) %>%
 
 ```
 
-
-
-# Terrain Analysis (3)
-# Creating the hydrologically corrected surface
-```{r,message=FALSE,warning=FALSE}
+##### Creating the hydrologically corrected surface
+```{r,message=FALSE,warning=FALSE, eval=FALSE}
 
 wbt_breach_depressions("../data/elev_raster_feet.tif", "../data/breach_depressions.tif")
 
 ```
 
-
-
-# Terrain Analysis (4)
-# Creating the HAND raster
-```{r,message=FALSE,warning=FALSE}
+##### Creating the HAND raster
+```{r,message=FALSE,warning=FALSE, eval=FALSE}
 
 wbt_elevation_above_stream("../data/breach_depressions.tif","../data/River.tif", "../data/Elevation_above_stream.tif")
 
 ```
 
-
-
-# Terrain Analysis (5)
 # Correcting to local reference datum
 ```{r,message=FALSE,warning=FALSE}
-
-#read in raster for HAND & add the offset (3.69) to the entire HAND raster
-
 Hand_raster = raster("../data/Elevation_above_stream.tif")+3.69
-
-
-#read in raster for River
-
-River_raster = raster("../data/River.tif")
-
-
-#then, ensure that if the cell has a value of 1 in the river raster then its HAND value is set to 0.
-
-Hand_raster[River_raster == 1] = 0
-
-
-#save the new, offset raster to your data folder
-
-writeRaster(Hand_raster,"../data/Corrected_tif.tif", overwrite=TRUE)
-
 ```
 
+Read in raster for HAND & add the offset (3.69) to the entire HAND raster
+
+```{r}
+River_raster = raster("../data/River.tif")
+```
+
+read in raster for River
+
+```{r}
+Hand_raster[River_raster == 1] = 0
+```
+
+Ensured that if the cell has a value of 1 in the river raster then its HAND value is set to 0.
+
+```{r}
+writeRaster(Hand_raster,"../data/Corrected_tif.tif", overwrite=TRUE)
+```
+
+Saved the new, offset raster to data folder
 
 
 # 2017 Impact Assessment
-# Map the flood & Estimate the impacts
+### Map the flood & Estimate the impacts
 
 ```{r,message=FALSE,warning=FALSE}
-
-# read in the corrected HAND raster
-
 Flood2017 = raster("../data/Corrected_tif.tif")
 Flood2017_map = Flood2017
+```
 
-# create a flood map where any cell with a HAND value greater then 10.02 is set to NA.
+Read in the corrected HAND raster
 
+```{r}
 Flood2017_map[Flood2017_map >= 10.02] = NA
+```
 
-# coloring inmpacted buildings
+Created a flood map where any cell with a HAND value greater then 10.02 is set to NA.
 
+```{r}
 cols = ifelse(!is.na(raster::extract(Flood2017_map, Centroid)), "red", "black")
-  
-# plot your hillshade as you did above, name your title with main and imput data into your title with paste0
-  
+```
+
+Colored impacted buildings
+
+##### Created resulting map with the following plots
+ - Plotted my hillshade, this time with a title using `main` and inputted data into your title with `paste0`.
+
+ - Plotted flood map and building shapes with their geometries
+
+ - Plotted the railway station as a point of reference colored in green, with cex = 1, pch = 16, and added the basin outline.
+ 
+```{r}
 plot(Hillshade, col= gray.colors(256, alpha = .5), legend=FALSE, main = paste0(sum(cols == "red"), " impacted buildings, 10.02 foot stage"))
-
-# plot flood map and building shapes with their geometries
-
 plot(Flood2017_map, col= rev(blues9), legend=FALSE, add=TRUE)
 plot(Centroid$geometry, add = TRUE, col = cols, pch = 16, cex=.08)
-
-# plot the railway station as a point of reference colored in green, with cex = 1, and pch = 16.
-
 plot(Railroad$geometry, col= "green", cex=1, pch=16, add = TRUE)
-
 plot(Basin$geometry, add = TRUE, border = "black")
-
 ```
 
 ### Does that map look accurate?
-### Yes, it does.
-
-
+ - Yes, it does.
 
 # Extra Credit
-# Flood Inudation Map library
-```{r,message=FALSE,warning=FALSE}
+### Flood Inudation Map library
+```{r,message=FALSE,warning=FALSE,eval=FALSE}
 sb = AOI::aoi_get("Santa Barbara")
 gif_flood = crop(Flood2017, sb) # cropping by comparing raster to vector
 basin_clip = st_intersection(Basin, sb) # cropping by comparing vector to vector
 hill_crop = crop(Hillshade, sb)
+```
 
-#Gif Creation
+### Gif Creation
+
+```{r,message=FALSE,warning=FALSE, eval=FALSE}
 gifski::save_gif({
   for(i in 0:20) {
     tmp = gif_flood
@@ -221,4 +214,4 @@ gifski::save_gif({
 ![Gif](../data/mission-creek-fim.gif)
 
 ### Why at 0 stage, are we capturing impacted buildings?
-### Because certain buildings on this map are so close to the river, remote sensing itslef isn't at the ability yet to capture this small of a difference between these specific buildings and the rivers nearby and because of this, Rstudios is also not able to then show this as well.
+Because certain buildings on this map are so close to the river, remote sensing itslef isn't at the ability yet to capture this small of a difference between these specific buildings and the rivers nearby and because of this, Rstudios is also not able to then show this as well.
